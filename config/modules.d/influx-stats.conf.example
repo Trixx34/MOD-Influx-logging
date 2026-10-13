@@ -1,0 +1,110 @@
+# Settings for the influx-stats module. Copy this file to worldserver.conf.d/modules.d/influx-stats.conf (under the config
+# directory). The core loads every .conf file under worldserver.conf.d at start-up and sends each Module.influx-stats.<Key> entry
+# to the module, with the prefix removed. Settings are read once, when the module starts; restart the module to change them.
+#
+# How often the server numbers are sampled is the core's setting, not this module's: set Modules.Stats.IntervalSec in
+# worldserver.conf (0 = no samples are sent, which is the default). Every sample the core sends becomes one batch of points.
+
+#
+#    Module.influx-stats.Enabled
+#        Description: Turns the module on. When off, the module connects and does nothing else.
+#        Default:     0
+#        Allowed:     0 (off), 1 (on)
+#
+
+Module.influx-stats.Enabled = 0
+
+#
+#    Module.influx-stats.Url
+#        Description: Where InfluxDB v2 listens. Plain http only: use InfluxDB on the same host, or a reverse proxy or Telegraf
+#                     on the local network. https:// is refused.
+#        Default:     "http://127.0.0.1:8086"
+#        Allowed:     http://host or http://host:port
+#
+
+Module.influx-stats.Url = "http://127.0.0.1:8086"
+
+#
+#    Module.influx-stats.Org
+#        Description: The InfluxDB organization (name or id) the bucket belongs to. Required when Enabled = 1.
+#        Default:     ""
+#        Allowed:     Any non-empty text
+#
+
+Module.influx-stats.Org = ""
+
+#
+#    Module.influx-stats.Bucket
+#        Description: The bucket to write to. It must exist already.
+#        Default:     "forever"
+#        Allowed:     Any non-empty text
+#
+
+Module.influx-stats.Bucket = "forever"
+
+#
+#    Module.influx-stats.Token
+#        Description: An API token with write access to the bucket. Required when Enabled = 1. Keep this file readable by the
+#                     account that runs the worldserver only.
+#        Default:     ""
+#        Allowed:     Any non-empty text
+#
+
+Module.influx-stats.Token = ""
+
+#
+#    Module.influx-stats.FlushIntervalMs
+#        Description: The longest a point waits in the queue before a batch is sent. A batch also goes out as soon as BatchSize
+#                     points are queued.
+#        Default:     5000
+#        Allowed:     100 to 60000
+#
+
+Module.influx-stats.FlushIntervalMs = 5000
+
+#
+#    Module.influx-stats.BatchSize
+#        Description: The most points sent in one request.
+#        Default:     500
+#        Allowed:     1 to 5000
+#
+
+Module.influx-stats.BatchSize = 500
+
+#
+#    Module.influx-stats.MaxQueue
+#        Description: The most points held while InfluxDB is slow or down. Past this, the oldest points are dropped and counted
+#                     in the "dropped" field of the module measurement. Never lower than BatchSize.
+#        Default:     10000
+#        Allowed:     BatchSize to 1000000
+#
+
+Module.influx-stats.MaxQueue = 10000
+
+#
+#    Module.influx-stats.RequestTimeoutMs
+#        Description: How long one request to InfluxDB may take, connect to answer. A failed request is tried 3 times with a growing
+#                     wait, then the batch is dropped.
+#        Default:     3000
+#        Allowed:     100 to 60000
+#
+
+Module.influx-stats.RequestTimeoutMs = 3000
+
+#
+#    Module.influx-stats.MeasurementPrefix
+#        Description: Put in front of every measurement name ("server" becomes "forever_server").
+#        Default:     "forever_"
+#        Allowed:     Any text, including empty
+#
+
+Module.influx-stats.MeasurementPrefix = "forever_"
+
+#
+#    Module.influx-stats.GlobalTags
+#        Description: Tags added to every point, for telling several servers or realms apart in one bucket.
+#        Default:     ""
+#        Allowed:     Comma-separated key=value pairs, for example "realm=sim1,host=alpha"
+#
+
+Module.influx-stats.GlobalTags = ""
