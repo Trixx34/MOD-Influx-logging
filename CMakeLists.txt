@@ -4,19 +4,6 @@ project(influx_stats LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# The SDK can come from a local checkout (FOREVER_MODULE_SDK_SOURCE) or from GitHub.
-set(FOREVER_MODULE_SDK_SOURCE "" CACHE PATH "Path to a forever-module-sdk checkout (optional)")
-set(FOREVER_MODULE_SDK_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-if(FOREVER_MODULE_SDK_SOURCE)
-    add_subdirectory("${FOREVER_MODULE_SDK_SOURCE}" "${CMAKE_BINARY_DIR}/forever-module-sdk")
-else()
-    include(FetchContent)
-    FetchContent_Declare(forever_module_sdk
-        GIT_REPOSITORY https://github.com/Trixx34/forever-module-sdk
-        GIT_TAG main)
-    FetchContent_MakeAvailable(forever_module_sdk)
-endif()
-
 find_package(Boost 1.78 REQUIRED)
 find_package(Threads REQUIRED)
 
@@ -38,6 +25,28 @@ endif()
 
 add_library(influx_server_metrics STATIC src/server_metrics.cpp)
 target_link_libraries(influx_server_metrics PUBLIC influx_writer)
+
+# Everything the module and other modules need to write points. Linking this does not pull in the SDK.
+add_library(influx_logging INTERFACE)
+target_link_libraries(influx_logging INTERFACE influx_http influx_server_metrics)
+
+# Added as a subdirectory of another project: provide the library and stop.
+if(NOT CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
+    return()
+endif()
+
+# The SDK can come from a local checkout (FOREVER_MODULE_SDK_SOURCE) or from GitHub.
+set(FOREVER_MODULE_SDK_SOURCE "" CACHE PATH "Path to a forever-module-sdk checkout (optional)")
+set(FOREVER_MODULE_SDK_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+if(FOREVER_MODULE_SDK_SOURCE)
+    add_subdirectory("${FOREVER_MODULE_SDK_SOURCE}" "${CMAKE_BINARY_DIR}/forever-module-sdk")
+else()
+    include(FetchContent)
+    FetchContent_Declare(forever_module_sdk
+        GIT_REPOSITORY https://github.com/Trixx34/forever-module-sdk
+        GIT_TAG main)
+    FetchContent_MakeAvailable(forever_module_sdk)
+endif()
 
 add_executable(influx-stats src/main.cpp)
 target_link_libraries(influx-stats PRIVATE influx_http influx_server_metrics forever_module_sdk)

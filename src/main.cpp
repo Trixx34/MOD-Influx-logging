@@ -1,4 +1,4 @@
-// influx-stats: writes the core's server and bot statistics to InfluxDB v2 over HTTP.
+// influx-stats: writes the core's server statistics to InfluxDB v2 over HTTP.
 //
 // Usage: influx-stats <tier1-endpoint>. The core passes the endpoint when it spawns the module, and sends it a WorldScript.OnStats
 // sample every Modules.Stats.IntervalSec seconds. Everything slow happens in this process, on a worker thread
@@ -88,20 +88,9 @@ int main(int argc, char** argv)
         sample.UpdateDiffAvgMs = stats.update_diff_avg_ms();
         sample.UpdateDiffMaxMs = stats.update_diff_max_ms();
         sample.UpdateTicks = stats.update_ticks();
-        sample.BotsTotal = stats.bots_total();
-        sample.BotsOnline = stats.bots_online();
-        sample.BotsQueued = stats.bots_queued();
-        sample.BotsLoggingIn = stats.bots_logging_in();
-        sample.OnlineBotsByClass.assign(stats.online_bots_by_class().begin(), stats.online_bots_by_class().end());
-        sample.OnlineBotsByLevelBand.assign(stats.online_bots_by_level_band().begin(), stats.online_bots_by_level_band().end());
 
         std::int64_t const now = NowNs();
         writer->Enqueue(influx_stats::BuildServerPoint(sample, influx_stats::ReadProcessRssKb(corePid), now));
-        writer->Enqueue(influx_stats::BuildBotsPoint(sample, now));
-        for (influx_stats::Point& point : influx_stats::BuildBotClassPoints(sample, now))
-            writer->Enqueue(std::move(point));
-        for (influx_stats::Point& point : influx_stats::BuildBotLevelPoints(sample, now))
-            writer->Enqueue(std::move(point));
         writer->Enqueue(influx_stats::BuildModulePoint(writer->Stats(), now));
     });
 

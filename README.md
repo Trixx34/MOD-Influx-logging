@@ -12,13 +12,10 @@ are dropped and counted, and nothing else happens to the server.
 | Measurement | Tags | Fields |
 |---|---|---|
 | `forever_server` | | `players_online` (not bots), `sessions_queued`, `uptime_s`, `update_diff_avg_ms`, `update_diff_max_ms`, `update_ticks`, `rss_kb` (worldserver memory; Linux only) |
-| `forever_bots` | | `total`, `online`, `queued`, `logging_in` |
-| `forever_bots_by_class` | `class` | `online` |
-| `forever_bots_by_level` | `band` (`0-9`, `10-19`, ...) | `online` |
 | `forever_module` | | `queued`, `written`, `dropped`, `failures` (the writer's own counters) |
 
-Not yet: bot deaths, quests done, auction house activity and stuck/loop events. Those are events inside the bot code, not state the
-core can sample; each needs a counter at its source and a field in the sample.
+Bot figures (counts, deaths, quests, stuck episodes) are not here: the bots module (MOD-Forever-Bots) reports them itself, using this
+repository's writer as a library (see below).
 
 ## Needs
 
@@ -38,3 +35,9 @@ Clone into `modules/influx-stats/` of the core checkout (the directory name must
 
     cmake -S . -B build -DFOREVER_MODULE_SDK_SOURCE=/path/to/forever-module-sdk
     cmake --build build && ctest --test-dir build
+
+## Using the writer from another module
+
+The CMake file defines a library target `influx_logging` (line protocol encoder, settings parser, batching writer, HTTP transport). When this
+repository is added as a subdirectory (`FetchContent` or `add_subdirectory`), only the library is built, not the module or its tests.
+MOD-Forever-Bots uses it for its bot statistics.
